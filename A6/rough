@@ -1,0 +1,25 @@
+
+child(arjun, pandu).
+child(yudhshthir, pandu).
+child(nakul, pandu).
+child(sahadev, pandu).
+child(bheem, pandu).
+child(arjun, kunti).
+child(yudhshthir, kunti).
+child(nakul, kunti).
+child(sahadev, kunti).
+child(bheem, kunti).
+child(duryodhan, dhritrashtra).
+child(duryodhan, gandhari).
+child(pandu, bhishma).
+child(dhritrashtra, bhishma).
+
+
+husband(dhritrashtra, gandhari).
+husband(pandu, kunti).
+
+brother(X,Y) :- parent(X,Z), parent(Y,Z).
+nephew(X,Y) :- child(Z,Y), brother(Z,Y).
+father(X,Y) :- child(Y,X), male(X).
+mother(X,Y) :- child(Y,X), female(X).
+husband(X,Y) :- father(X,Z), mother(Y,Z). 

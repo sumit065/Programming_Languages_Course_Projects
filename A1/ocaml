@@ -1,0 +1,109 @@
+#  OCaml comments are delimited by (* and *), like this:
+
+# OCaml, in common with other functional languages, writes and brackets function calls differently, 
+and this is the cause of many mistakes. 	Here is the same function call in OCaml:
+
+	repeated "hello" 3  (* this is OCaml code *)
+
+# The syntax repeated ("hello", 3) is meaningful in OCaml.
+ It means "call the function repeated with ONE argument, that argument being a 'pair' structure of 
+ two elements".
+
+# func (another_func arg1 arg2) arg3 ;;  #calls "func" with two arguments, first one being the function 
+call (another_func arg1 arg2)
+
+#the brackets enclose the first argument of func because that argument is the result of another function 
+call. In general the rule is: "bracket around the whole function call — don't put brackets around the 
+arguments to a function call".
+
+#Defining functions:
+	
+	let avg a b = (a +. b)/. 2.0 ;;   # +. means a floating point + ;;  lly /. 
+
+#As a side-effect of type inference in OCaml, functions (including operators) can't have overloaded definitions.
+
+#  	OCaml type  Range
+
+	int         31-bit signed int (roughly +/- 1 billion) on 32-bit
+		    processors, or 63-bit signed int on 64-bit processors
+	float       IEEE double-precision floating point, equivalent to C's double
+	bool        A boolean, written either true or false
+	char        An 8-bit character
+	string      A string
+	unit        Written as ()
+
+# bignums (the Nat and Big_int modules) allow numbers bigger than 1 billion
+# However if you need to do things such as processing 32 bit types (eg. you're writing crypto code or a network stack), OCaml provides a   	nativeint type which matches the native integer type for your platform.
+# The unit type is sort of like void in C
+
+
+# Typecasting:
+	# float_of_int 2 +. 3.0;;     
+	- : float = 5.
+
+	# int_of_char '4' + 3 ;;
+	- : int = 55
+
+        # 3.0 +. float 7;;
+	- : float = 10.
+
+
+#  Note:  1 + 2.0   or  1 +. 2.0   gives error as the operands are of different types.
+   Whole load of these functions, e.g.  int_of_float, char_of_int, int_of_char, string_of_int
+
+#  a function isn't recursive unless you explicitly say so by using let rec instead of just let
+
+#compiling and running:
+
+ocamlc -o hello hello.ml
+./hello
+
+//or 
+ocmalopt -o hello hello.ml
+./hello
+
+
+#Arrays:
+let arr = Array.make [size] [init_val];;
+let mat = Array.make_matrix [rows] [cols] [init_val];;
+mat.(i).(j) <- 24.0;;
+
+Array.append arr1 arr2;;
+Array.concat arr_list arr;;
+Array.sub arr start_index len;; //subarray of arr
+Array.fil arr offset len x;;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

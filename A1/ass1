@@ -1,0 +1,255 @@
+type vector = float list
+type matrix = float list list
+
+exception InvalidInput;;
+exception UnequalVectorSize;;
+exception UnequalMatrixShape;;
+exception IncompatibleMatrixShape;;
+exception SingularMatrix;;
+
+
+(*Vectors*)
+
+
+1# let rec vdim (v:vector): int = match v with
+	[] -> 0
+	|x::xs -> 1 + (vdim xs);;
+val vdim : vector -> int = <fun>
+
+
+2#  let rec mkzerov (n:int): vector = match n with
+  		0 -> []
+  		| x -> 0.::(mkzerov (x-1));;
+val mkzerov : int -> vector = <fun>
+
+
+3# let rec iszerov (v:vector): bool =  match v with
+  		[] -> true
+  		| x::xs -> if x = 0. then (iszerov xs) else false;;
+val iszerov : vector -> bool = <fun>
+
+
+4# let rec addv (v1:vector) (v2:vector): vector =  match v1, v2 with
+  	[], [] -> []
+  	|x::xs , y::ys -> (x +. y)::(addv xs ys)    
+  	|[], x::xs -> raise(UnequalVectorSize)
+  	|x::xs, [] -> raise(UnequalVectorSize);;
+val addv : vector -> vector -> vector = <fun>
+
+5# let rec scalarmultv (c:float) (v:vector): vector = match v with
+  			[] -> []
+  			|x::xs -> (c *. x)::(scalarmultv c xs);;
+
+
+................................................................................
+...................corrected upto this..........................................
+................................................................................
+
+
+6# let rec prodv v1 v2 =  match v1, v2 with
+  	([], []) -> 0.
+  	|(x::xs , y::ys) ->  (prodv xs ys) +. (x *. y)
+  	|([], x::xs) -> raise(Invalid_argument "vectors must be of the same size")
+  	|(x::xs, []) -> raise(Invalid_argument "vectors must be of the same size");;
+
+7# cartesian product nahi hai. What is the cross-product of two n-tuples?
+
+
+................................................................................
+..........................corrected beyond this.................................
+................................................................................
+
+
+
+(*Matrix*)
+
+
+1.	# let rec lgh (m:matrix): int = match m with
+	  			[] -> 0
+	  			|x::xs -> 1 + (lgh xs) ;;
+	val lgh : matrix -> int = <fun>
+
+	# let rec mdim (m:matrix): int*int = match m with
+	  			[] -> (0, 0)
+	  			|x::xs -> (1 + (lgh xs), vdim x);;
+	val mdim : matrix -> int * int = <fun>
+
+
+2.      # let rec mkzerom (m_:int) (n_:int): matrix = match m_ with
+	  			0 -> []
+	  			|x -> (mkzerov n_)::(mkzerom (m_ - 1) n_);;
+	val mkzerom : int -> int -> matrix = <fun>
+
+
+3.      # let rec iszerom (m:matrix): bool = match m with
+	  			[] -> true
+	  			|x::xs -> if (iszerov x) then (iszerom xs) else false;;
+	val iszerom : matrix -> bool = <fun>
+
+
+4.	# let rec mkunitv (n:int): vector = match n with
+  		0 -> []
+  		| x -> 1.::(mkunitv (x-1));;    
+	val mkunitv : int -> vector = <fun>
+
+	# let rec mkunitm_ (m_:int) (n_:int): matrix = match m_ with
+		  			0 -> []
+		  			|x -> (mkunitv n_)::(mkunitm_ (m_ - 1) n_);;    
+	val mkunitm_ : int -> int -> matrix = <fun>
+
+	# let rec mkunitm (m_:int): matrix = mkunitm_ m_ m_ ;;
+	val mkunitm : int -> matrix = <fun>
+
+
+5.	# let rec isunitv (v:vector): bool =  match v with
+	  		[] -> true
+	  		| x::xs -> if x = 1. then (isunitv xs) else false;;
+
+	# let rec are_all_ones_in (m:matrix): bool = match m with 
+					[] -> true
+					|x::xs -> if (isunitv x) then (are_all_ones_in xs) else false;;
+
+	# let rec isunitm (m:matrix): bool = let (x,y) = mdim m in 
+					if x <> y then false
+					else 
+					are_all_ones_in m;;
+
+
+6. 	# let rec addm (m1:matrix) (m2:matrix): matrix = let (x1,y1) = mdim m1 and (x2, y2) = mdim m2 in
+					if ((x1 <> x2) || (y1 <> y2)) then raise(UnequalMatrixShape)
+ 					else match m1, m2 with
+					[], [] -> []
+					|x::xs, y::ys -> (addv x y)::(addm xs ys);;
+
+	Warning 8: this pattern-matching is not exhaustive.
+	Here is an example of a value that is not matched:
+	(_::_, [])
+	val addm : matrix -> matrix -> matrix = <fun>
+
+7.      # let rec scalarmultm (c:float) (m:matrix): matrix = match m with
+				[] -> []
+				|x::xs -> (scalarmultv c x)::(scalarmultm c xs);;
+
+
+8.      # let rec multm (m1:matrix) (m2:matrix): matrix = let (r1,c1) = mdim m1 and (r2,c2) = mdim m2 in
+			if c1 <> r2 then raise IncompatibleMatrixShape else 
+			let res_matrix = ref [] in
+			for i = 0 to r1-1 do
+				let cur_row = let row = ref [] in
+				for j = 0 to c2-1 do
+						let cur_sum = let s = ref 0. in
+						for k = 0 to c1-1 do
+							s := !s +. (List.nth (List.nth m1 i) k) *. (List.nth (List.nth m2 k) j)
+						done;
+						!s in
+						row := append !row cur_sum				
+				done;
+				!row in
+				res_matrix := append !res_matrix cur_row
+			done;
+			!res_matrix
+		
+		# multm [[1.0;2.];[3.;4.]] [[-3.;-8.;3.];[-2.;1.;4.]];;
+		- : int list list = [[-7; -6; 11]; [-17; -20; 25]]
+
+9. 	# let rec transm (m:matrix): matrix = 
+		let (r,c) = mdim m in 
+		let res_matrix = ref [] in
+		for j=0 to c-1 do
+			let cur_row = 
+				let row = ref [] in
+				for i=0 to r-1 do
+					row := append !row (List.nth (List.nth m i) j)
+				done;
+				!row in
+			res_matrix := append !res_matrix cur_row
+		done;
+		!res_matrix
+	  ;;
+
+10.     # let rec detm (m:matrix): float = let (r,c) = mdim m in
+		if r<>c then raise UnequalMatrixShape else
+		let uptr_mat = Array.of_list (List.map Array.of_list m) in
+		for i = 0 to r-1 do
+			for j=0 to r-1 do
+				if j > i then	
+					let ratio = uptr_mat.(j).(i) /. uptr_mat.(i).(i) in
+					for k=0 to r-1 do
+						uptr_mat.(j).(k) <- uptr_mat.(j).(k) -. (ratio *. (uptr_mat.(i).(k)))
+					done
+			done
+		done;
+		let det = ref 1. in
+		for l = 0 to r-1 do
+			det := !det *. (uptr_mat.(l).(l))
+		done;
+		!det
+		;;
+
+11.     #  let rec append m x = match m with
+		[] -> [x]
+		|y::ys -> y::(append ys x);;
+
+
+	   let rec invm (m:matrix): matrix = let (r,c) = mdim m in
+		if r <> c then raise UnequalMatrixShape else
+		let det = detm m in
+		if det = 0. then raise SingularMatrix else
+		let cofactor_matrix = let cofac_matrix = ref [] in
+		for i=0 to r-1 do
+			let cur_row = let row = ref [] in
+			for j = 0 to r-1 do
+				let cofactor = let c = ref 0. in
+					let mat = let temp_mat = ref [] in
+					for x = 0 to r-1 do
+						if x <> i then
+						let temp_row = let temp_temp_row = ref [] in
+						for y=0 to r-1 do
+							if y <> j then
+							temp_temp_row := append !temp_temp_row (List.nth (List.nth m x) y)
+						done;						
+						!temp_temp_row in
+						temp_mat := append !temp_mat temp_row						
+					done;
+					!temp_mat in
+
+					c := (detm mat)*.(-1. ** float(i+j))
+				; !c in
+				row := append !row cofactor				
+			done;
+			!row in
+			cofac_matrix := append !cofac_matrix cur_row
+		done;
+		!cofac_matrix in
+		transm (scalarmultm (1. /. det) cofactor_matrix)
+		;;
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

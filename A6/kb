@@ -1,0 +1,41 @@
+---Example 'kb' file:
+
+male(arjun).
+male(pandu).
+male(yudhishthir).
+father(pandu, arjun).
+father(pandu, yudhishthir).
+
+son(X, Y) :- male(X), father(Y,X).
+
+---Compilation Steps:
+
+1. Generate lexer from lexer.mll
+	
+ocamllex lexer.mll
+ocamlopt -o lexer lexer.ml
+
+2. Generate the lexer tokens file for the file 'kb' containig the clauses.This step creates the
+ file 'kb-lex' which contains the tokens for lexed 'kb'
+
+./lexer kb
+
+3. Generate parser from file parser.mly
+
+ocamlyacc parser.mly
+rm parser.mli
+ocamlopt -c backend.ml
+ocamlopt -c parser.ml	
+ocamlopt -o parser str.cmxa backend.ml parser.ml
+
+4. Parse the lex file 'kb-lex'
+
+./parser kb-lex
+
+5. Enter the query on STDIN 
+
+--- Remarks:
+    The query resolution occurs through the function 'resolve_query'.
+    The 'kb' file is passes as a list of 'clause' to the 'resolve_query' function as its first argument.
+    The query is passes as list of 'term' to the 'resolve_query' function as its second argument (goal).
+    'resolve_query' does search with backtracking for resolution of query.
